@@ -1,26 +1,51 @@
 import React, { Component } from 'react';
-import api from '../../serices/api';
+import {Link } from 'react-router-dom';
+import api from '../../services/api';
 import './styles.css';
 
 
 export default class Main extends Component{
   state = {
-    product: []
+    product: [],
+    productInfo: [],
+    page: 1,
   }
 
   componentDidMount(){
     this.loadProducts();
   }
 
-  loadProducts = async () => {
-    const response = await api.get('/products');
+  loadProducts = async (page = 1) => {
+    const response = await api.get(`/products?page=${page}`);
 
-    this.setState({ product: response.data.docs})
+    const { docs, ...productInfo } = response.data;
+
+    this.setState({ product: docs, productInfo, page})
 
   };
 
+  prevPage = () => {
+      const { page } = this.state;
+
+      if(page == 1) return;
+
+      const pageNumber = page - 1;
+
+      this.loadProducts(pageNumber);
+  }
+
+  nextPage = () => {
+      const { page, productInfo} = this.state;
+
+      if(page == productInfo.pages) return;
+
+      const pageNumber = page + 1;
+
+      this.loadProducts(pageNumber);
+  }
+
   render(){
-    const { product } = this.state;
+    const { product, page, productInfo } = this.state;
 
   return(
     <div className="product-list">
@@ -28,12 +53,17 @@ export default class Main extends Component{
         <article key={product._id}>
           <strong>{product.title}</strong>
           <p>{product.description}</p>
-          <a href="">Acessar</a>
+          <Link to={`/products/${product._id}`}>Acessar</Link>
         </article>
       ))}
-      <div className="actions"></div>
-      <button>Anterior</button>
-      <button>Proximo</button>
+      <div className="actions">
+        <button disabled={page == 1} onClick={this.prevPage}>
+          Anterior
+        </button>
+        <button disabled={page == productInfo} onClick={this.nextPage}>
+          Proximo
+        </button>
+      </div>
     </div>
   )
   }
